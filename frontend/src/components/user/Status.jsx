@@ -1,164 +1,103 @@
-import axios from 'axios'
-import React, { useEffect, useState } from 'react'
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import Card from 'react-bootstrap/Card';
 import Alert from 'react-bootstrap/Alert';
-import { Button } from 'react-bootstrap';
+import { Button, Spinner } from 'react-bootstrap';
 import ChatWindow from '../common/ChatWindow';
 import Collapse from 'react-bootstrap/Collapse';
 
+const API_BASE = process.env.REACT_APP_API_URL;
+
 const Status = () => {
-  const [toggle, setToggle] = useState({})
+  const [toggle, setToggle] = useState({});
+  const [statusComplaints, setStatusComplaints] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [statusCompliants, setStatusCompliants] = useState([]);
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    
-    const { _id } = user;
-    axios.get(`http://localhost:8000/status/${_id}`)
-      .then((res) => {
-        setStatusCompliants(res.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+      setLoading(false);
+      return;
+    }
 
+    const user = JSON.parse(storedUser);
+    axios
+      .get(`${API_BASE}/status/${user._id}`)
+      .then((res) => setStatusComplaints(res.data))
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleToggle = (complaintId) => {
-    setToggle((prevState) => ({
-       ...prevState,
-       [complaintId]: !prevState[complaintId],
-    }));
- };
+    setToggle((prev) => ({ ...prev, [complaintId]: !prev[complaintId] }));
+  };
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '60vh' }}>
+        <Spinner animation="border" role="status" variant="primary">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <div style={{ display: "flex", flexWrap: "wrap", margin: "20px" }}>
-        {statusCompliants.length > 0 ? (
-          statusCompliants.map((complaint, index) => {
-            const open = toggle[complaint._id] || false;
+    <div className="container mt-4">
+      <div className="row">
+        {statusComplaints.length > 0 ? (
+          statusComplaints.map((complaint) => {
+            const open = !!toggle[complaint._id];
             return (
-              <Card key={index} style={{ width: '18.5rem', margin: '0 15px 15px 0' }}>
-                <Card.Body>
-                  <Card.Title>Name: {complaint.name}</Card.Title>
-                  <Card.Text>Address: {complaint.address}</Card.Text>
-                  <Card.Text>City: {complaint.city}</Card.Text>
-                  <Card.Text>State: {complaint.state}</Card.Text>
-                  <Card.Text>Pincode: {complaint.pincode}</Card.Text>
-                  <Card.Text>Comment: {complaint.comment}</Card.Text>
-                  <Card.Text>Status: {complaint.status}</Card.Text>
-                  <Button className='mb-2' style={{float: 'right'}} onClick={() => handleToggle(complaint._id)}
-                    aria-controls={`collapse-${complaint._id}`}
-                    aria-expanded={open} variant="primary">
-                    Message
-                  </Button>
-                  <div style={{ minHeight: '100%'}}>
-                    <Collapse in={open} dimension="width">
-                      <div id="example-collapse-text">
-                        <Card body style={{ width: '260px', marginTop: '12px' }}>
-                          <ChatWindow key={complaint.complaintId} complaintId={complaint._id} name={complaint.name} />
+              <div key={complaint._id} className="col-md-4 col-sm-6 mb-4">
+                <Card>
+                  <Card.Body>
+                    <Card.Title>Name: {complaint.name}</Card.Title>
+                    <Card.Text>Address: {complaint.address}</Card.Text>
+                    <Card.Text>City: {complaint.city}</Card.Text>
+                    <Card.Text>State: {complaint.state}</Card.Text>
+                    <Card.Text>Pincode: {complaint.pincode}</Card.Text>
+                    <Card.Text>Comment: {complaint.comment}</Card.Text>
+                    <Card.Text>Status: <strong>{complaint.status}</strong></Card.Text>
+
+                    <Button
+                      className="mb-2"
+                      onClick={() => handleToggle(complaint._id)}
+                      aria-controls={`collapse-${complaint._id}`}
+                      aria-expanded={open}
+                      variant="primary"
+                      aria-label={`Toggle messages for complaint by ${complaint.name}`}
+                    >
+                      {open ? 'Hide Messages' : 'Message'}
+                    </Button>
+
+                    <Collapse in={open}>
+                      <div id={`collapse-${complaint._id}`}>
+                        <Card body className="mt-3">
+                          <ChatWindow
+                            key={complaint._id}
+                            complaintId={complaint._id}
+                            name={complaint.name}
+                          />
                         </Card>
                       </div>
                     </Collapse>
-                  </div>
-                </Card.Body>
-              </Card>
-            )
-
+                  </Card.Body>
+                </Card>
+              </div>
+            );
           })
         ) : (
-          <Alert variant="info">
-            <Alert.Heading>No complaints to show</Alert.Heading>
-          </Alert>
+          <div className="col-12">
+            <Alert variant="info">
+              <Alert.Heading>No complaints to show</Alert.Heading>
+              <p>You haven't submitted any complaints yet.</p>
+            </Alert>
+          </div>
         )}
       </div>
-
-
-
-    </>
-  )
-}
+    </div>
+  );
+};
 
 export default Status;
-
-
-
-
-
-
-
-
-
-// import React, { useEffect, useState } from 'react'
-// const Status = () => {
-//   const [city, setCity] = useState('');
-//   const [state, setState] = useState('');
-//   const [complaint, setComplaint] = useState("")
-
-//   // useEffect(()=>{
-//   //   const id = localStorage.getItem("user")
-//   //   console.log(id)
-
-//   //     // axios.get(`http://localhost:8000/status${id}`)
-//   //     // .then((res)=>{
-//   //     //   const { city, state, complaint } = res.data;
-//   //     //   console.log(city,state,complaint)
-//   //     //   setState(state);
-//   //     //   setCity(city);
-//   //     //   setComplaint(complaint)
-//   //     // })
-//   //     // .catch((err)=>{
-//   //     //   console.log(err)
-//   //     // })
-//   // },[])
-//   useEffect(() => {
-//     const user = JSON.parse(localStorage.getItem('user'));
-//     const { _id } = user;
-//     console.log(_id);
-//     axios.get(`http://localhost:8000/status/${_id}`)
-//       .then((res) => {
-//         axios.get('http://localhost:8000/Complaint')
-//           .then((res) => {
-//             const { city, state, complaint } = res.data;
-//             console.log(city, state, complaint)
-//             setState(state);
-//             setCity(city);
-//             setComplaint(complaint)
-//           })
-//           .catch((err) => {
-//             console.log(err)
-//           })
-//       })
-//       .catch((err) => {
-//         console.log(err)
-//       })
-//   }, []);
-
-//   return (
-//     <>
-//       <div className="row">
-//         <div className="status col-sm-6 mb-sm-0">
-//           <div className="card status-card">
-//             <div className="card-body">
-//               <h5 className="card-title">City:{city}</h5>
-//               <p className="card-text">State:{state} </p>
-//               <p className="card-text">Complaint:{complaint} </p>
-
-//             </div>
-//           </div>
-//         </div>
-//         <div className="status col-sm-6 mb-sm-0">
-//           <div className="card status-card">
-//             <div className="card-body">
-//               <h5 className="card-title">h</h5>
-//               <p className="card-text">Lorem ipsum dolor sit amet, consectetur adipisicing elit. <br />In, voluptatibus!</p>
-
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </>
-//   )
-// }
-
-// export default Status

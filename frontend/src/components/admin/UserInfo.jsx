@@ -1,148 +1,193 @@
-import React, { useEffect, useState } from 'react';
-import Button from 'react-bootstrap/Button';
-import { useNavigate } from 'react-router-dom';
-import Table from 'react-bootstrap/Table';
-import Alert from 'react-bootstrap/Alert';
-import { Container } from 'react-bootstrap';
-import Collapse from 'react-bootstrap/Collapse';
-import Form from 'react-bootstrap/Form';
+import React, { useEffect, useState } from 'react'
+import Button from 'react-bootstrap/Button'
+import { useNavigate } from 'react-router-dom'
+import Table from 'react-bootstrap/Table'
+import Alert from 'react-bootstrap/Alert'
+import { Container } from 'react-bootstrap'
+import Collapse from 'react-bootstrap/Collapse'
+import Form from 'react-bootstrap/Form'
 import Footer from '../common/FooterC'
+import axios from 'axios'
 
-import axios from 'axios';
+const API_BASE = process.env.REACT_APP_API_URL
 
 const UserInfo = () => {
-   const navigate = useNavigate();
-   const [ordinaryList, setOrdinaryList] = useState([]);
-   const [toggle, setToggle] = useState({})
+  const navigate = useNavigate()
+  const [ordinaryList, setOrdinaryList] = useState([])
+  const [toggle, setToggle] = useState({})
+  const [updateUser, setUpdateUser] = useState({})
 
-   // const [count, setCount] = useState(0)
+  // Handle input change per user
+  const handleChange = (e, userId) => {
+    const { name, value } = e.target
+    setUpdateUser((prev) => ({
+      ...prev,
+      [userId]: {
+        ...prev[userId],
+        [name]: value,
+      },
+    }))
+  }
 
-   const [updateUser, setUpdateUser] = useState({
-      name: '',
-      email: '',
-      phone: '',
-   })
+  // Submit updated user info
+  const handleSubmit = async (userId) => {
+    const updatedFields = updateUser[userId] || {}
+    if (!updatedFields.name && !updatedFields.email && !updatedFields.phone) {
+      alert('At least one field needs to be filled')
+      return
+    }
 
-   const handleChange = (e) => {
-      setUpdateUser({ ...updateUser, [e.target.name]: e.target.value })
-   }
+    const originalUser = ordinaryList.find((u) => u._id === userId)
+    const payload = {
+      name: updatedFields.name || originalUser.name,
+      email: updatedFields.email || originalUser.email,
+      phone: updatedFields.phone || originalUser.phone,
+    }
 
-   const handleSubmit = async (user_id) => {
-      if (updateUser === "") {
-         alert("atleast 1 fields need to be fill")
-      }
-      else {
-         window.confirm("Are you sure you want to Update the user?");
-         axios.put(`http://localhost:8000/user/${user_id}`, updateUser)
-            .then((res) => {
-               alert(`user updated successfully`)
-               JSON.stringify(res.data)
-            })
-            .catch((err) => {
-               console.log(err)
-            })
-      }
-   }
+    if (!window.confirm('Are you sure you want to update the user?')) return
 
-   useEffect(() => {
-      const getOrdinaryRecords = async () => {
-         try {
-            const response = await axios.get('http://localhost:8000/OrdinaryUsers');
-            const ordinary = response.data;
-            setOrdinaryList(ordinary)
-         } catch (error) {
-            console.log(error);
-         }
-      };
-      getOrdinaryRecords();
-   }, [navigate]);
+    try {
+      await axios.put(`${API_BASE}/user/${userId}`, payload)
+      alert('User updated successfully')
+      const { data } = await axios.get(`${API_BASE}/OrdinaryUsers`)
+      setOrdinaryList(data)
+      setToggle((prev) => ({ ...prev, [userId]: false }))
+      setUpdateUser((prev) => ({ ...prev, [userId]: {} }))
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
-   const deleteUser = async (userId) => {
+  useEffect(() => {
+    const getOrdinaryRecords = async () => {
       try {
-         const confirmed = window.confirm("Are you sure you want to delete the user?");
-         if (confirmed) {
-            await axios.delete(`http://localhost:8000/OrdinaryUsers/${userId}`);
-            setOrdinaryList(ordinaryList.filter((user) => user._id !== userId));
-         }
+        const { data } = await axios.get(`${API_BASE}/OrdinaryUsers`)
+        setOrdinaryList(data)
       } catch (error) {
-         console.log(error);
+        console.error(error)
       }
-   }
+    }
+    getOrdinaryRecords()
+  }, [])
 
-   const handleToggle = (complaintId) => {
-      setToggle((prevState) => ({
-         ...prevState,
-         [complaintId]: !prevState[complaintId],
-      }));
-   };
+  const deleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete the user?')) return
+    try {
+      await axios.delete(`${API_BASE}/OrdinaryUsers/${userId}`)
+      setOrdinaryList((prev) => prev.filter((u) => u._id !== userId))
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
-   return (
-      <>
-         <div className="body">
+  const handleToggle = (userId) => {
+    setToggle((prev) => ({ ...prev, [userId]: !prev[userId] }))
+  }
 
-            <Container>
-               <Table striped bordered hover>
-                  <thead>
-                     <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Action</th>
-                     </tr>
-                  </thead>
-                  <tbody>
-                     {ordinaryList.length > 0 ? (
-                        ordinaryList.map((user) => {
-                           const open = toggle[user._id] || false;
-
-                           return (
-                              <tr key={user._id}>
-                                 <td>{user.name}</td>
-                                 <td>{user.email}</td>
-                                 <td>{user.phone}</td>
-                                 <td><Button onClick={() => handleToggle(user._id)}
-                                    aria-controls={`collapse-${user._id}`}
-                                    aria-expanded={open}
-                                    className='mx-2'
-                                    variant="outline-warning">
-                                    Update
-                                 </Button>
-                                    <Collapse in={open}>
-                                       <Form onSubmit={() => handleSubmit(user._id)} className='p-5'>
-                                          <Form.Group className="mb-3" controlId="formBasic">
-                                             <Form.Label>Full Name </Form.Label>
-                                             <Form.Control name='name' value={updateUser.name} onChange={handleChange} type="text" placeholder="Enter name" />
-                                          </Form.Group>
-                                          <Form.Group className="mb-3" controlId="formBasicEmail">
-                                             <Form.Label>Email address</Form.Label>
-                                             <Form.Control name='email' value={updateUser.email} onChange={handleChange} type="email" placeholder="Enter email" />
-                                          </Form.Group>
-
-                                          <Form.Group className="mb-3" controlId="formBasicTel">
-                                             <Form.Label>Phone</Form.Label>
-                                             <Form.Control name='phone' value={updateUser.phone} onChange={handleChange} type="tel" placeholder="Enter Phone no." />
-                                          </Form.Group>
-
-                                          <Button size='sm' variant="outline-success" type="submit">
-                                             Submit
-                                          </Button>
-                                       </Form>
-                                    </Collapse>
-                                    <Button onClick={() => deleteUser(user._id)} className='mx-2' variant="outline-danger">Delete</Button></td>
-                              </tr>
-                           )
-                        })
-                     ) : (
-                        <Alert variant="info">
-                           <Alert.Heading>No Users to show</Alert.Heading>
-                        </Alert>
-                     )}
-                  </tbody>
-               </Table>
-            </Container>
-         </div>
-            <Footer />
-      </>
-   )
+  return (
+    <>
+      <div className="body">
+        <Container>
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ordinaryList.length > 0 ? (
+                ordinaryList.map((user) => {
+                  const open = !!toggle[user._id]
+                  return (
+                    <tr key={user._id}>
+                      <td>{user.name}</td>
+                      <td>{user.email}</td>
+                      <td>{user.phone}</td>
+                      <td>
+                        <Button
+                          onClick={() => handleToggle(user._id)}
+                          aria-controls={`collapse-${user._id}`}
+                          aria-expanded={open}
+                          className="mx-2"
+                          variant="outline-warning"
+                        >
+                          Update
+                        </Button>
+                        <Collapse in={open}>
+                          <div>
+                            <Form
+                              onSubmit={(e) => {
+                                e.preventDefault()
+                                handleSubmit(user._id)
+                              }}
+                              className="p-4"
+                            >
+                              <Form.Group className="mb-3" controlId={`formName-${user._id}`}>
+                                <Form.Label>Full Name</Form.Label>
+                                <Form.Control
+                                  name="name"
+                                  value={updateUser[user._id]?.name || ''}
+                                  onChange={(e) => handleChange(e, user._id)}
+                                  type="text"
+                                  placeholder="Enter name"
+                                />
+                              </Form.Group>
+                              <Form.Group className="mb-3" controlId={`formEmail-${user._id}`}>
+                                <Form.Label>Email address</Form.Label>
+                                <Form.Control
+                                  name="email"
+                                  value={updateUser[user._id]?.email || ''}
+                                  onChange={(e) => handleChange(e, user._id)}
+                                  type="email"
+                                  placeholder="Enter email"
+                                />
+                              </Form.Group>
+                              <Form.Group className="mb-3" controlId={`formPhone-${user._id}`}>
+                                <Form.Label>Phone</Form.Label>
+                                <Form.Control
+                                  name="phone"
+                                  value={updateUser[user._id]?.phone || ''}
+                                  onChange={(e) => handleChange(e, user._id)}
+                                  type="tel"
+                                  placeholder="Enter phone number"
+                                />
+                              </Form.Group>
+                              <Button size="sm" variant="outline-success" type="submit">
+                                Submit
+                              </Button>
+                            </Form>
+                          </div>
+                        </Collapse>
+                        <Button
+                          onClick={() => deleteUser(user._id)}
+                          className="mx-2"
+                          variant="outline-danger"
+                        >
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan="4">
+                    <Alert variant="info" className="text-center m-0">
+                      No Users to show
+                    </Alert>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </Table>
+        </Container>
+      </div>
+      <Footer />
+    </>
+  )
 }
+
 export default UserInfo
