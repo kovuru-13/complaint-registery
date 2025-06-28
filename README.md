@@ -1,32 +1,112 @@
-# Complaint System
 
-### Version
-1.0.0
+# 🛠️ Online Complaint Management Platform (MERN Stack)
 
-## 📝 Usage
+A full-stack web application designed to simplify the registration, tracking, and resolution of user complaints. Built using the **MERN stack**, it supports role-based access and seamless interaction between users, agents, and admins.
 
-### Installation
+---
 
-```sh
-$ npm install
+## 🚀 Features
+
+- 🔐 Secure authentication with JWT (Login & Register)
+- 📝 Complaint submission with detailed descriptions and attachments
+- 🧑‍💻 Role-based dashboards for User, Agent, and Admin
+- 🔄 Real-time complaint tracking and status updates
+- 💬 In-app messaging for communication between users and agents
+- 📊 Admin controls for assigning complaints and managing users
+- 🌐 Responsive UI using Material UI or TailwindCSS
+
+---
+
+## 🧭 Application Flow
+
+### 👤 **Customer / User**
+
+- **Register/Login** securely
+- **Submit Complaints** with optional attachments
+- **Track Complaint Status** in real time
+- **Communicate** with agents through chat
+- **Manage Profile** with contact and personal details
+
+---
+
+### 🧑‍🔧 **Agent**
+
+- **Login/Register** using secure credentials
+- **View Assigned Complaints** in the dashboard
+- **Update Status** of complaints (e.g., In Progress, Resolved)
+- **Chat with Users** for clarification or updates
+
+---
+
+### 👨‍💼 **Admin**
+
+- **Monitor All Complaints**
+- **Assign Complaints** to agents
+- **Manage Users & Agents**
+- **View Analytics** and ensure efficient platform operation
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+- React.js  
+- React Router  
+- Axios  
+- Material-UI (MUI) or TailwindCSS  
+
+### Backend
+
+- Node.js  
+- Express.js  
+- MongoDB with Mongoose  
+- JWT Authentication  
+- Multer for file/image uploads  
+
+---
+
+## 🧑‍🤝‍🧑 Team Members
+
+| Name               | Role(s)                                  |
+|--------------------|-------------------------------------------|
+| **Kovuru Lakshmaiah** | Backend Developer, Team Lead             |
+| **M Bhavana**          | Frontend Developer                      |
+| **M Hemasri**          | Frontend Developer                      |
+
+---
+
+## ▶️ Run the Application
+
+### Start the Backend
+
+```bash
+cd backend
+npm install
+npm run dev
 ```
 
-### Run
+### Start the Frontend
 
-```sh
-$ npm start
+```bash
+cd ../frontend
+npm install
+npm start
 ```
 
-## See it Live [HERE](http://complaint-system.herokuapp.com/)
+- The app will run on: `http://localhost:3000`
 
-### ScreenShot
+---
 
-![Screenshot (2)](https://user-images.githubusercontent.com/34777376/56275958-520d6200-611f-11e9-9e65-d4566940425d.png)
+## 📌 Future Enhancements
 
-![Screenshot (1)](https://user-images.githubusercontent.com/34777376/56276083-84b75a80-611f-11e9-8bbd-895feb274a10.png)
+- 📧 Email Notifications  
+- 📎 Multiple Attachments Support  
+- 🔔 Real-time Push Notifications  
+- 📊 Admin Analytics Dashboard  
 
-![Screenshot (3)](https://user-images.githubusercontent.com/34777376/56276092-8719b480-611f-11e9-932c-bde83b132c2b.png)
+---
 
-![Screenshot (4)](https://user-images.githubusercontent.com/34777376/56276133-9993ee00-611f-11e9-8922-ecb7ffe6af87.png)
+## 📄 License
 
-![Screenshot (5)](https://user-images.githubusercontent.com/34777376/56276144-9ef13880-611f-11e9-92e5-1a1a26b82967.png)
+This project is intended for educational and project development purposes. Free to use and modify.
